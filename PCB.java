@@ -19,7 +19,7 @@ public class PCB {
         LinkedList<Process> ready = new LinkedList<Process>();
         LinkedList<Process> blocked = new LinkedList<Process>();
         
-        //REMAINDER OF DATA NEEDED FOR SET UP
+        //MORE DATA FOR SET UP
         Scanner sc = new Scanner(System.in); //get user input
         System.out.print("Type the max memory you would like to use: ");
         int userMax = sc.nextInt(); //the size of memory 
@@ -92,8 +92,8 @@ public class PCB {
                 System.out.println("The process generator has finished.");
             }else if(userChoice == 10){
                 //EXECUTE
-                
-                
+                execute(memory,ready,blocked);
+                System.out.println("Execute has completed.");
                 
             }else if(userChoice == 11){
                 sc.nextLine();
@@ -185,34 +185,31 @@ public class PCB {
     public static boolean deleteProcess(int uniqueID, Process[] memSet, LinkedList<Process> ready, LinkedList<Process> blocked){
         Iterator<Process> itReady = ready.iterator();//creates pointer at the priority queue so data can be obtained
         Iterator<Process> itBlocked = blocked.iterator();//creates pointer at the priority queue so data can be obtained
-        boolean looper = true;
         
-        while(looper){
-            while(itReady.hasNext()){
-                Process p = itReady.next();
-                if (p.getIdNum() == uniqueID) {
+        while(itReady.hasNext()){
+            Process p = itReady.next();
+            if (p.getIdNum() == uniqueID) {
+                System.out.println("The process has been found.");
+                ready.remove(p);
+                return true;
+            }
+        }
+        while(itBlocked.hasNext()){
+            Process b = itBlocked.next();
+            if(b.getIdNum() == uniqueID){
+                System.out.println("The process has been found.");
+                blocked.remove(b);
+                return true;
+            }
+        }           
+        for(int i=0;i<memSet.length;i++){
+            if(memSet[i] != null){
+                if(memSet[i].getIdNum() == uniqueID){
                     System.out.println("The process has been found.");
-                    ready.remove(p);
+                    memSet[i] = new Process();
                     return true;
                 }
-            }
-            while(itBlocked.hasNext()){
-                Process b = itBlocked.next();
-                if(b.getIdNum() == uniqueID){
-                    System.out.println("The process has been found.");
-                    blocked.remove(b);
-                    return true;
-                }
-            }           
-            for(int i=0;i<memSet.length;i++){
-                if(memSet[i] != null){
-                    if(memSet[i].getIdNum() == uniqueID){
-                        System.out.println("The process has been found.");
-                        memSet[i] = new Process();
-                        return true;
-                    }
-                }                
-            }
+            }                
         }
         return false;
     } 
@@ -293,7 +290,7 @@ public class PCB {
         while(itReady.hasNext()){
             Process p = itReady.next();
             if (p.getIdNum() == uniqueID) {
-                System.out.println("The process has been found.");
+                System.out.println("The process has been found in the ready queue.");
                 System.out.println("ID:" + p.getIdNum());
                 System.out.println("CPU Term:" + p.getCPUterm());
                 System.out.println("I/O Requests:" + p.getIOrequest());
@@ -306,7 +303,7 @@ public class PCB {
         while(itBlocked.hasNext()){
             Process b = itBlocked.next();
             if(b.getIdNum() == uniqueID){
-                System.out.println("The process has been found.");
+                System.out.println("The process has been found in the blocked queue.");
                 System.out.println("ID:" + b.getIdNum());
                 System.out.println("CPU Term:" + b.getCPUterm());
                 System.out.println("I/O Requests:" + b.getIOrequest());
@@ -318,7 +315,7 @@ public class PCB {
         for(int i=0;i<memSet.length;i++){
             if(memSet[i] != null){
                 if(memSet[i].getIdNum() == uniqueID){
-                    System.out.println("The process has been found.");
+                    System.out.println("The process has been found in memory.");
                     System.out.println("ID:" + memSet[i].getIdNum());
                     System.out.println("CPU Term:" + memSet[i].getCPUterm());
                     System.out.println("I/O Requests:" + memSet[i].getIOrequest());
@@ -367,7 +364,7 @@ public class PCB {
         System.out.print("Memory Set:");
         for(int i=0;i<memSet.length;i++){
             if(memSet[i] != null){
-                System.out.println("ID:" + memSet[i].getIdNum()+ ",");
+                System.out.print("ID:" + memSet[i].getIdNum()+ ",");
                 System.out.print("CPU:" + memSet[i].getCPUterm()+ ",");
                 System.out.print("I/O:" + memSet[i].getIOrequest()+ ",");
                 System.out.print("Wait:" + memSet[i].getWaitingTerm()+ ",");
@@ -450,13 +447,13 @@ public class PCB {
         Iterator<Process> itBlocked = blocked.iterator();//creates pointer at the priority queue so data can be obtained
         int randProcessCounter = 0;
         int mem = userMax;
-            while(randProcessCounter <= numRandProcesses){
+            while(randProcessCounter < numRandProcesses){
                 if(mem != 0){
                     Random rand = new Random();
-                    int randNum = rand.nextInt(numRandProcesses*2);
+                    int randNum = rand.nextInt(numRandProcesses*10) + 1;
                     if(generateProcessesHelper(randNum,memSet,ready,blocked)){
                         Random rand2 = new Random();
-                        int randNum2 = rand2.nextInt(mem);
+                        int randNum2 = rand2.nextInt(mem/2) + 1;
                         if(randNum2 < mem){
                             Process n = new Process(randNum,0,0,0,randNum2);
                             mem=mem-randNum2;
@@ -472,18 +469,93 @@ public class PCB {
     }
     
     public static void execute(Process[] memSet,LinkedList<Process> ready,LinkedList<Process> blocked){
+        
+        //SET UP VARIABLES
         Iterator<Process> itReady = ready.iterator();//creates pointer at the priority queue so data can be obtained
         Iterator<Process> itBlocked = blocked.iterator();//creates pointer at the priority queue so data can be obtained
-        
         Process b = itReady.next();
         memSet[0] = b;
         ready.remove(b);
-        
-        Random rand = new Random();
-        int randNum = rand.nextInt(10000);
-        b.setCPUterm(b.getCPUterm() + randNum);
-        while(itReady.hasNext()){
-            b.setWaitingTerm(b.getWaitingTerm() + randNum);         
+        int counter = 0;
+        boolean inMem = true;
+       
+        //LOOP UNTIL ALL PROCESSES HAVE BEEN COMPLETED OR BLOCKED
+        while(inMem == true || ready.size() > 0){
+            //CPU TERM IS ADDED AS IT ENTERS MEMORY
+            Random rand = new Random();
+            int randNum = rand.nextInt(10000);
+            b.setCPUterm(randNum);   
+            itReady = ready.iterator();
+            itBlocked = blocked.iterator();
+            b.setCPUterm(b.getCPUterm()-1);
+            counter++;
+
+            //IF THERE THE PROCESS HAS COMPLETED, REMOVE IT and add the next one
+            if(memSet[0].getCPUterm() == 0){
+                if(itReady.hasNext()){
+                    b = itReady.next();
+                    memSet[0] = b;
+                } else{
+                    memSet[0] = null;
+                }
+                
+            }
+            
+            //MEMORY IS EMPTY, SATISFY CONDITION TO END WHILE LOOP
+            if(memSet[0] == null){
+                //WAS SUPPOSED TO REMOVE THE FINAL ELEMENT IN MEMORY
+                inMem = false;
+            }
+            
+            //reduce each wait term by 1 per iteration
+            while(itReady.hasNext()){
+                Process p = itReady.next();
+                if(p.getWaitingTerm() == 0){
+                    p.setWaitingTerm(b.getCPUterm());
+                }
+                p.setWaitingTerm(p.getWaitingTerm()-1);
+            }
+            while(itBlocked.hasNext()){
+                Process g = itBlocked.next();
+                if(g.getWaitingTerm() == 0){
+                    g.setWaitingTerm(b.getCPUterm());
+                }
+                g.setWaitingTerm(g.getWaitingTerm()-1);
+            }           
+            for(int i=0;i<memSet.length;i++){
+                if(memSet[i] != null){
+                    memSet[i].setWaitingTerm(memSet[i].getWaitingTerm()-1);
+                    memSet[i].setCPUterm(memSet[i].getCPUterm()-1);
+                }                
+            }
+
+            //this is supposed to move the next ready process into memory
+            //the other process is never getting kicked out of memory, so its not length 0
+            if(memSet[0] == null){
+                if(itReady.hasNext()){
+                    memSet[0] = itReady.next();
+                } else{
+                    
+                }
+            }
+
+            if(counter == 10){
+                int wheelOfFortune = rand.nextInt(3);
+                if(wheelOfFortune == 0){
+                    showProcess(b.getIdNum(),memSet,ready,blocked);
+                    deleteProcess(b.getIdNum(),memSet,ready,blocked);
+                } else if(wheelOfFortune == 1){
+                    unblockProcess(b.getIdNum(),memSet,ready,blocked);
+                } else if(wheelOfFortune == 2){
+                    blockProcess(b.getIdNum(),memSet,ready,blocked);
+                } else if(wheelOfFortune == 3){
+                    blockProcess(b.getIdNum(),memSet,ready,blocked);
+                } else{
+                    System.out.println("Something went wrong in random number generation");
+                }
+                counter = 0;
+            }
         }
+        
     }
 }
