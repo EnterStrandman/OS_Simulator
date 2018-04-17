@@ -1,0 +1,17 @@
+0|User Max: 1000
+1|User Chose: 9
+2|Number of processes to be generated: 10
+3|The processes were stored in a file
+4|User Chose: 10
+5|5 Queues were selected
+6|10 time quantam was chosen
+7|100 cycles were chosen to run until all processes are top priority
+8|User Chose: 6
+9|All Processes Shown. 
+10|User Chose: 11
+11|The user exited the program
+0|User Max: 1000
+1|User Chose: 11
+2|User selected to compare the methods of scheduling
+3|User Chose: 12
+4|The user exited the program
